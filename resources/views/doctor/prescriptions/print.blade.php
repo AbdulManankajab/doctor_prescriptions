@@ -274,6 +274,14 @@
                         {{ $prescription->doctor->phone }}
                     @endif
                 </div>
+                
+                @if($prescription->qr_token)
+                <div class="mt-2 d-flex flex-column align-items-end">
+                    <div class="p-1 border rounded bg-white shadow-sm" style="display: inline-block;">
+                        {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(52)->generate($prescription->qr_token) !!}
+                    </div>
+                </div>
+                @endif
             </div>
 
             <!-- Clinic Branding (Center) -->
@@ -305,17 +313,8 @@
 
                 <div>
                     <span class="section-title">Tests Advised</span>
-                    <div class="small text-muted mb-4">-</div>
+                    <div class="small text-muted">-</div>
                 </div>
-
-                @if($prescription->qr_token)
-                <div class="mt-4 text-center">
-                    <div class="qr-code-container d-inline-block p-1 border rounded">
-                        {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(80)->generate($prescription->qr_token) !!}
-                    </div>
-                    <div style="font-size: 8px; margin-top: 5px; color: #888;">SCAN TO VERIFY</div>
-                </div>
-                @endif
             </div>
 
             <!-- Rx Area -->
