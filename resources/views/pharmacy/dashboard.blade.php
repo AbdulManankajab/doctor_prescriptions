@@ -50,8 +50,11 @@
                                         <a href="{{ route('pharmacy.prescriptions.show', $prescription->id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                             <i class="bi bi-eye me-1"></i> View
                                         </a>
+                                        <a href="{{ route('pharmacy.prescriptions.print', $prescription->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-3 ms-2">
+                                            <i class="bi bi-printer me-1"></i> Print
+                                        </a>
                                         @if($prescription->status === 'sent')
-                                            <form action="{{ route('pharmacy.prescriptions.dispense', $prescription->id) }}" method="POST" class="d-inline ml-2">
+                                            <form action="{{ route('pharmacy.prescriptions.dispense', $prescription->id) }}" method="POST" class="d-inline ms-2">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" onclick="return confirm('Mark as dispensed?')">
                                                     <i class="bi bi-check-circle me-1"></i> Dispense

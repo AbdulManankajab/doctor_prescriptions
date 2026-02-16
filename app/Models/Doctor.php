@@ -22,6 +22,7 @@ class Doctor extends Authenticatable
         'bio',
         'profile_picture',
         'facility_id',
+        'status',
     ];
 
     protected $hidden = [
@@ -31,6 +32,7 @@ class Doctor extends Authenticatable
 
     protected $casts = [
         'password' => 'hashed',
+        'status' => 'boolean',
     ];
 
     public function facility()

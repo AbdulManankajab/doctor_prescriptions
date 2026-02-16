@@ -25,6 +25,7 @@ class Prescription extends Model
         'sent_at',
         'dispensed_at',
         'dispensed_by',
+        'visit_id',
     ];
 
     protected $casts = [
@@ -75,5 +76,20 @@ class Prescription extends Model
     public function diagnosisRecord()
     {
         return $this->belongsTo(Diagnosis::class, 'diagnosis_id');
+    }
+
+    public function radiologyRequests()
+    {
+        return $this->hasMany(RadiologyRequest::class);
+    }
+
+    public function laboratoryRequests()
+    {
+        return $this->hasMany(LaboratoryRequest::class);
+    }
+
+    public function visit()
+    {
+        return $this->belongsTo(Visit::class);
     }
 }

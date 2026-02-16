@@ -98,6 +98,58 @@
                             <p>Pharmacy Users</p>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {{ request()->routeIs('admin.radiology.*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-x-ray"></i>
+                            <p>
+                                Radiology
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.radiology.index') }}" class="nav-link {{ request()->routeIs('admin.radiology.index') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Staff Accounts</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.radiology.requests') }}" class="nav-link {{ request()->routeIs('admin.radiology.requests') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>View All Requests</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {{ request()->routeIs('admin.laboratory.*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-flask"></i>
+                            <p>
+                                Laboratory
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.laboratory.index') }}" class="nav-link {{ request()->routeIs('admin.laboratory.index') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Staff Accounts</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.laboratory.requests') }}" class="nav-link {{ request()->routeIs('admin.laboratory.requests') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>View All Requests</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.reception.index') }}" class="nav-link {{ request()->routeIs('admin.reception.*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-user-friends"></i>
+                            <p>Receptionists</p>
+                        </a>
+                    </li>
                     <li class="nav-header">SYSTEM MANAGEMENT</li>
                     <li class="nav-item">
                         <a href="{{ route('admin.medicines.index') }}" class="nav-link {{ request()->routeIs('admin.medicines.*') ? 'active' : '' }}">
@@ -111,7 +163,7 @@
                             <p>Default Notes</p>
                         </a>
                     </li>
-                    <li class="nav-header">LINKS</li>
+                    <li class="nav-header">PORTAL LINKS</li>
                     <li class="nav-item">
                         <a href="{{ route('doctor.dashboard') }}" class="nav-link" target="_blank">
                             <i class="nav-icon fas fa-user-md text-primary"></i>
@@ -122,6 +174,24 @@
                         <a href="{{ route('pharmacy.dashboard') }}" class="nav-link" target="_blank">
                             <i class="nav-icon fas fa-capsules text-teal"></i>
                             <p>Pharmacy Portal</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('radiology.dashboard') }}" class="nav-link" target="_blank">
+                            <i class="nav-icon fas fa-x-ray text-blue"></i>
+                            <p>Radiology Portal</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('laboratory.dashboard') }}" class="nav-link" target="_blank">
+                            <i class="nav-icon fas fa-flask text-success"></i>
+                            <p>Laboratory Portal</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('reception.dashboard') }}" class="nav-link" target="_blank">
+                            <i class="nav-icon fas fa-user-friends text-info"></i>
+                            <p>Reception Portal</p>
                         </a>
                     </li>
                 </ul>

@@ -18,6 +18,9 @@
             --admin-color: #6366f1;
             --doctor-color: #0ea5e9;
             --pharmacy-color: #0d9488;
+            --radiology-color: #3b82f6;
+            --laboratory-color: #0d9488;
+            --reception-color: #3a7bd5;
         }
 
         body {
@@ -34,7 +37,7 @@
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             padding: 20px;
         }
 
@@ -102,6 +105,16 @@
         .pharmacy-box {
             background-color: rgba(13, 148, 136, 0.1);
             color: var(--pharmacy-color);
+        }
+
+        .radiology-box {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--radiology-color);
+        }
+
+        .laboratory-box {
+            background-color: rgba(13, 148, 136, 0.1);
+            color: var(--laboratory-color);
         }
 
         .portal-card:hover .icon-box {
@@ -178,6 +191,53 @@
             transform: translateY(-2px);
         }
 
+        .btn-radiology {
+            background-color: var(--radiology-color);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+        }
+
+        .btn-radiology:hover {
+            background-color: #2563eb;
+            color: white;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23);
+            transform: translateY(-2px);
+        }
+
+        .btn-laboratory {
+            background-color: var(--laboratory-color);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 14px 0 rgba(13, 148, 136, 0.39);
+        }
+
+        .btn-laboratory:hover {
+            background-color: #0f766e;
+            color: white;
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.23);
+            transform: translateY(-2px);
+        }
+
+        .reception-box {
+            background-color: rgba(58, 123, 213, 0.1);
+            color: var(--reception-color);
+        }
+
+        .btn-reception {
+            background-color: var(--reception-color);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 14px 0 rgba(58, 123, 213, 0.39);
+        }
+
+        .btn-reception:hover {
+            background-color: #2f69c5;
+            color: white;
+            box-shadow: 0 6px 20px rgba(58, 123, 213, 0.23);
+            transform: translateY(-2px);
+        }
+
         .portal-card:hover .btn-portal {
             transform: translateY(-3px);
         }
@@ -206,7 +266,7 @@
 
     <div class="row g-4 justify-content-center">
         <!-- Admin Portal -->
-        <div class="col-md-4">
+        <div class="col-lg-4 col-md-6">
             <div class="portal-card">
                 @auth('admin')
                     <span class="badge-new bg-success">Logged In</span>
@@ -216,7 +276,7 @@
                         <i class="bi bi-shield-lock"></i>
                     </div>
                     <h3>Admin Panel</h3>
-                    <p>Global oversight of doctors, clinics, system settings, and pharmacy users.</p>
+                    <p>Global oversight of doctors, clinics, system settings, and staff accounts.</p>
                 </div>
                 @auth('admin')
                     <a href="{{ route('admin.dashboard') }}" class="btn btn-portal btn-admin">
@@ -231,7 +291,7 @@
         </div>
 
         <!-- Doctor Portal -->
-        <div class="col-md-4">
+        <div class="col-lg-4 col-md-6">
             <div class="portal-card">
                 @auth('doctor')
                     <span class="badge-new bg-success">Logged In</span>
@@ -243,7 +303,7 @@
                         <i class="bi bi-person-heart"></i>
                     </div>
                     <h3>Doctor Portal</h3>
-                    <p>Manage patients, create digital prescriptions, and view medical history.</p>
+                    <p>Manage patients, create digital prescriptions, and request diagnostics.</p>
                 </div>
                 @auth('doctor')
                     <a href="{{ route('doctor.dashboard') }}" class="btn btn-portal btn-doctor">
@@ -258,7 +318,7 @@
         </div>
 
         <!-- Pharmacy Portal -->
-        <div class="col-md-4">
+        <div class="col-lg-4 col-md-6">
             <div class="portal-card">
                 @auth('pharmacy')
                     <span class="badge-new bg-success">Logged In</span>
@@ -277,6 +337,81 @@
                 @else
                     <a href="{{ route('pharmacy.login') }}" class="btn btn-portal btn-pharmacy">
                         Access Pharmacy <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                @endauth
+            </div>
+        </div>
+
+        <!-- Radiology Portal -->
+        <div class="col-lg-4 col-md-6">
+            <div class="portal-card">
+                @auth('radiology')
+                    <span class="badge-new bg-success">Logged In</span>
+                @endauth
+                <div>
+                    <div class="icon-box radiology-box">
+                        <i class="bi bi-x-diamond-fill"></i>
+                    </div>
+                    <h3>Radiology Dept</h3>
+                    <p>Access X-Ray requests, upload diagnostic images, and provide reports.</p>
+                </div>
+                @auth('radiology')
+                    <a href="{{ route('radiology.dashboard') }}" class="btn btn-portal btn-radiology">
+                        Go to Dashboard <i class="bi bi-speedometer2 ms-2"></i>
+                    </a>
+                @else
+                    <a href="{{ route('radiology.login') }}" class="btn btn-portal btn-radiology">
+                        Access X-Ray Portal <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                @endauth
+            </div>
+        </div>
+
+        <!-- Laboratory Portal -->
+        <div class="col-lg-4 col-md-6">
+            <div class="portal-card">
+                @auth('laboratory')
+                    <span class="badge-new bg-success">Logged In</span>
+                @endauth
+                <div>
+                    <div class="icon-box laboratory-box">
+                        <i class="bi bi-water"></i>
+                    </div>
+                    <h3>Medical Laboratory</h3>
+                    <p>Mange blood tests, enter laboratory results, and upload digital findings.</p>
+                </div>
+                @auth('laboratory')
+                    <a href="{{ route('laboratory.dashboard') }}" class="btn btn-portal btn-laboratory">
+                        Go to Dashboard <i class="bi bi-speedometer2 ms-2"></i>
+                    </a>
+                @else
+                    <a href="{{ route('laboratory.login') }}" class="btn btn-portal btn-laboratory">
+                        Access Lab Portal <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                @endauth
+            </div>
+        </div>
+
+        <!-- Reception Portal -->
+        <div class="col-lg-4 col-md-6">
+            <div class="portal-card">
+                @auth('reception')
+                    <span class="badge-new bg-success">Logged In</span>
+                @endauth
+                <div>
+                    <div class="icon-box reception-box">
+                        <i class="bi bi-person-workspace"></i>
+                    </div>
+                    <h3>Reception Panel</h3>
+                    <p>Register new patients, search records, and create hospital visit tokens.</p>
+                </div>
+                @auth('reception')
+                    <a href="{{ route('reception.dashboard') }}" class="btn btn-portal btn-reception">
+                        Go to Dashboard <i class="bi bi-speedometer2 ms-2"></i>
+                    </a>
+                @else
+                    <a href="{{ route('reception.login') }}" class="btn btn-portal btn-reception">
+                        Access Reception <i class="bi bi-arrow-right ms-2"></i>
                     </a>
                 @endauth
             </div>

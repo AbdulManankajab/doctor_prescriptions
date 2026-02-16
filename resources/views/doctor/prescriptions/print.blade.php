@@ -231,7 +231,7 @@
                 <i class="bi bi-printer-fill me-2"></i> Print (A5)
             </button>
             
-            @if($prescription->status === 'draft')
+            @if($prescription->status === 'final')
                 <form action="{{ route('doctor.prescriptions.send', $prescription->id) }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm" onclick="return confirm('Send this prescription to the hospital pharmacy? Once sent, it will be locked from editing.')">

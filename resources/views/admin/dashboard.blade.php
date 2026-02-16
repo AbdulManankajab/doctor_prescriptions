@@ -141,6 +141,20 @@
                 View All <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>
+    <!-- Total Visits -->
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-indigo" style="background-color: #6610f2 !important; color: white;">
+            <div class="inner">
+                <h3>{{ $totalVisits }}</h3>
+                <p>Total Patient Visits</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-walking" style="color: rgba(255,255,255,0.3)"></i>
+            </div>
+            <a href="#" class="small-box-footer">
+                More info <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
     </div>
 </div>
 

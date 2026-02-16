@@ -12,6 +12,7 @@ use App\Models\Examination;
 use App\Models\ExaminationFile;
 use App\Models\Diagnosis;
 use App\Models\PatientAllergy;
+use App\Models\Visit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +25,19 @@ class DoctorPrescriptionController extends Controller
         $query = $request->input('search');
         $doctorId = Auth::guard('doctor')->id();
         
-        $patients = Patient::where('doctor_id', $doctorId)
-            ->where(function($q) use ($query) {
+        // Search by visit number first
+        $visit = Visit::where('visit_number', $query)
+            ->where('assigned_doctor_id', $doctorId)
+            ->with('patient')
+            ->first();
+
+        if ($visit) {
+            $patient = $visit->patient;
+            $patient->visit_id = $visit->id; // Attach visit_id to patient object for frontend
+            return response()->json([$patient]);
+        }
+
+        $patients = Patient::where(function($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
                   ->orWhere('phone', 'LIKE', "%{$query}%")
                   ->orWhere('patient_number', 'LIKE', "%{$query}%");
@@ -38,20 +50,27 @@ class DoctorPrescriptionController extends Controller
         return response()->json($patients);
     }
 
-    public function create($patientId = null)
+    public function create(Request $request, $patientId = null)
     {
         $doctorId = Auth::guard('doctor')->id();
         $patient = null;
+        $visitId = $request->query('visit_id');
+        $visit = null;
+
+        if ($visitId) {
+            $visit = Visit::where('assigned_doctor_id', $doctorId)->findOrFail($visitId);
+            $patientId = $visit->patient_id;
+        }
+
         if ($patientId) {
-            $patient = Patient::where('doctor_id', $doctorId)
-                ->with(['allergies', 'examinations.files', 'diagnoses'])
+            $patient = Patient::with(['allergies', 'examinations.files', 'diagnoses'])
                 ->findOrFail($patientId);
         }
         
         $medicines = Medicine::all();
         $defaultNotes = DefaultPrescriptionDetail::all();
         
-        return view('doctor.prescriptions.create', compact('patient', 'medicines', 'defaultNotes'));
+        return view('doctor.prescriptions.create', compact('patient', 'medicines', 'defaultNotes', 'visit'));
     }
 
     public function store(Request $request)
@@ -72,6 +91,7 @@ class DoctorPrescriptionController extends Controller
         }
 
         $request->validate([
+            'visit_id' => 'nullable|exists:visits,id',
             'name' => 'required|string|max:255',
             'age' => 'required|integer|min:1',
             'gender' => 'required|in:Male,Female,Other',
@@ -84,23 +104,29 @@ class DoctorPrescriptionController extends Controller
             'allergies' => 'nullable|array',
             'allergies.*.name' => 'nullable|string|max:255',
             'allergies.*.type' => 'required_with:allergies.*.name|in:medicine,food,other',
-            'medicines' => 'required|array|min:3',
-            'medicines.*.medicine_id' => 'required|exists:medicines,id',
-            'medicines.*.type' => 'required|string',
-            'medicines.*.dosage' => 'required|string',
-            'medicines.*.duration' => 'required|string',
-            'medicines.*.instructions' => 'required|string',
+            'status' => 'nullable|in:draft,final',
+            // Medicines only required if status is final
+            'medicines' => 'required_if:status,final|array',
+            'medicines.*.medicine_id' => 'required_with:medicines|exists:medicines,id',
+            'medicines.*.type' => 'required_with:medicines|string',
+            'medicines.*.dosage' => 'required_with:medicines|string',
+            'medicines.*.duration' => 'required_with:medicines|string',
+            'medicines.*.instructions' => 'required_with:medicines|string',
+        ], [
+            'medicines.required_if' => 'Medicines must be added to finalize the prescription.'
         ]);
 
         DB::beginTransaction();
         try {
-            // Check if patient exists by phone AND doctor_id
-            $patient = Patient::where('phone', $request->phone)
-                ->where('doctor_id', $doctorId)
-                ->first();
+            $visitSelected = null;
+            if ($request->visit_id) {
+                $visitSelected = Visit::find($request->visit_id);
+            }
+
+            // Global patient lookup
+            $patient = Patient::where('phone', $request->phone)->first();
 
             if (!$patient) {
-                // Create new patient for this doctor
                 $patient = Patient::create([
                     'doctor_id' => $doctorId,
                     'name' => $request->name,
@@ -110,7 +136,9 @@ class DoctorPrescriptionController extends Controller
                     'address' => $request->address,
                 ]);
             } else {
-                // Update patient info
+                if (!$patient->doctor_id) {
+                    $patient->doctor_id = $doctorId;
+                }
                 $patient->update([
                     'name' => $request->name,
                     'age' => $request->age,
@@ -123,12 +151,8 @@ class DoctorPrescriptionController extends Controller
             if ($request->has('allergies')) {
                 foreach ($request->allergies as $allergyData) {
                     if (empty($allergyData['name'])) continue;
-                    
                     PatientAllergy::updateOrCreate(
-                        [
-                            'patient_id' => $patient->id,
-                            'allergy_name' => $allergyData['name']
-                        ],
+                        ['patient_id' => $patient->id, 'allergy_name' => $allergyData['name']],
                         ['allergy_type' => $allergyData['type']]
                     );
                 }
@@ -141,7 +165,6 @@ class DoctorPrescriptionController extends Controller
                 'notes' => $request->examination_notes,
             ]);
 
-            // Handle Examination Files
             if ($request->hasFile('examination_files')) {
                 foreach ($request->file('examination_files') as $file) {
                     $path = $file->store('examinations/' . $examination->id, 'public');
@@ -161,23 +184,111 @@ class DoctorPrescriptionController extends Controller
                 'secondary_diagnosis' => $request->secondary_diagnosis,
             ]);
 
-            // Create prescription linked to doctor, examination and diagnosis
             $diagnosisSummary = $request->primary_diagnosis ?: 'No specific diagnosis';
             if ($request->secondary_diagnosis) {
                 $diagnosisSummary .= ' / ' . $request->secondary_diagnosis;
             }
 
-            $prescription = Prescription::create([
+            $status = $request->input('status', 'draft');
+
+            $prescriptionData = [
                 'doctor_id' => $doctorId,
                 'patient_id' => $patient->id,
+                'visit_id' => $request->visit_id,
                 'examination_id' => $examination->id,
                 'diagnosis_id' => $diagnosisObj->id,
                 'diagnosis' => $diagnosisSummary,
                 'notes' => $request->notes,
                 'facility_snapshot' => $facilitySnapshot,
+                'status' => $status,
+            ];
+
+            if ($visitSelected) {
+                $prescriptionData['prescription_number'] = $visitSelected->visit_number;
+            }
+
+            $prescription = Prescription::create($prescriptionData);
+
+            // If finalized, mark visit as completed
+            if ($status === 'final' && $visitSelected) {
+                $visitSelected->update(['status' => 'completed']);
+            }
+
+            // Create items (if any)
+            if ($request->has('medicines')) {
+                foreach ($request->medicines as $item) {
+                    if (empty($item['medicine_id'])) continue;
+                    PrescriptionItem::create([
+                        'prescription_id' => $prescription->id,
+                        'medicine_id' => $item['medicine_id'],
+                        'type' => $item['type'],
+                        'dosage' => $item['dosage'],
+                        'duration' => $item['duration'],
+                        'instructions' => $item['instructions'],
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            if ($status === 'final') {
+                return redirect()->route('doctor.prescriptions.print', $prescription->id)
+                    ->with('success', 'Prescription finalized successfully!');
+            }
+
+            return redirect()->route('doctor.prescriptions.show', $prescription->id)
+                ->with('success', 'Draft prescription created successfully! You can now request investigations.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Error creating prescription: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    public function show($id)
+    {
+        $doctorId = Auth::guard('doctor')->id();
+        $prescription = Prescription::where('doctor_id', $doctorId)
+            ->with(['patient', 'items.medicine', 'doctor', 'radiologyRequests.files', 'laboratoryRequests.files'])
+            ->findOrFail($id);
+            
+        return view('doctor.prescriptions.show', compact('prescription'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $doctorId = Auth::guard('doctor')->id();
+        $prescription = Prescription::where('doctor_id', $doctorId)->findOrFail($id);
+
+        if ($prescription->status !== 'draft') {
+            return back()->with('error', 'Only draft prescriptions can be updated.');
+        }
+
+        $request->validate([
+            'notes' => 'nullable|string',
+            'medicines' => 'required|array|min:1',
+            'medicines.*.medicine_id' => 'required|exists:medicines,id',
+            'medicines.*.type' => 'required|string',
+            'medicines.*.dosage' => 'required|string',
+            'medicines.*.duration' => 'required|string',
+            'medicines.*.instructions' => 'required|string',
+            'status' => 'required|in:final',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $prescription->update([
+                'notes' => $request->notes,
+                'status' => 'final',
             ]);
 
-            // Create items
+            if ($prescription->visit_id) {
+                Visit::where('id', $prescription->visit_id)->update(['status' => 'completed']);
+            }
+
+            // Clear old items if any and add new ones
+            $prescription->items()->delete();
+
             foreach ($request->medicines as $item) {
                 PrescriptionItem::create([
                     'prescription_id' => $prescription->id,
@@ -191,12 +302,11 @@ class DoctorPrescriptionController extends Controller
 
             DB::commit();
 
-            return redirect()->route('doctor.prescriptions.print', $prescription->id)
-                ->with('success', 'Prescription created successfully!');
+            return redirect()->route('doctor.prescriptions.show', $prescription->id)
+                ->with('success', 'Prescription finalized successfully! You can now send it to the pharmacy.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Error creating prescription: ' . $e->getMessage()])
-                ->withInput();
+            return back()->withErrors(['error' => 'Error updating prescription: ' . $e->getMessage()]);
         }
     }
 
@@ -205,8 +315,16 @@ class DoctorPrescriptionController extends Controller
         $doctorId = Auth::guard('doctor')->id();
         $prescription = Prescription::where('doctor_id', $doctorId)->findOrFail($id);
 
-        if ($prescription->status !== 'draft') {
-            return back()->with('error', 'This prescription has already been sent or dispensed.');
+        if ($prescription->status !== 'final') {
+            return back()->with('error', 'Only finalized prescriptions can be sent to the pharmacy.');
+        }
+
+        // Check if all investigations are complete (optional but good practice)
+        $pendingRad = $prescription->radiologyRequests()->where('status', '!=', 'Completed')->count();
+        $pendingLab = $prescription->laboratoryRequests()->where('status', '!=', 'Completed')->count();
+
+        if ($pendingRad > 0 || $pendingLab > 0) {
+            return back()->with('error', 'All pending radiology and laboratory investigations must be completed before sending to pharmacy.');
         }
 
         $prescription->update([
@@ -214,9 +332,8 @@ class DoctorPrescriptionController extends Controller
             'sent_at' => now(),
         ]);
 
-        Log::info("Prescription #{$prescription->prescription_number} sent to pharmacy by Doctor ID: {$doctorId}");
-
-        return back()->with('success', 'Prescription sent to hospital pharmacy successfully!');
+        return redirect()->route('doctor.prescriptions.show', $prescription->id)
+            ->with('success', 'Prescription has been sent to the pharmacy.');
     }
 
     public function print($id)
@@ -239,15 +356,5 @@ class DoctorPrescriptionController extends Controller
             ->findOrFail($id);
             
         return view('doctor.prescriptions.history', compact('patient'));
-    }
-
-    public function show($id)
-    {
-        $doctorId = Auth::guard('doctor')->id();
-        $prescription = Prescription::where('doctor_id', $doctorId)
-            ->with(['patient', 'items.medicine', 'doctor'])
-            ->findOrFail($id);
-            
-        return view('doctor.prescriptions.show', compact('prescription'));
     }
 }

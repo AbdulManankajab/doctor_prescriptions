@@ -55,6 +55,21 @@ return [
             'driver' => 'session',
             'provider' => 'pharmacy_users',
         ],
+
+        'radiology' => [
+            'driver' => 'session',
+            'provider' => 'radiology_staff',
+        ],
+
+        'laboratory' => [
+            'driver' => 'session',
+            'provider' => 'laboratory_staff',
+        ],
+
+        'reception' => [
+            'driver' => 'session',
+            'provider' => 'reception_staff',
+        ],
     ],
 
     /*
@@ -93,6 +108,21 @@ return [
         'pharmacy_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\PharmacyUser::class,
+        ],
+
+        'radiology_staff' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\RadiologyStaff::class,
+        ],
+
+        'laboratory_staff' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\LaboratoryStaff::class,
+        ],
+
+        'reception_staff' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\ReceptionStaff::class,
         ],
 
         // 'users' => [

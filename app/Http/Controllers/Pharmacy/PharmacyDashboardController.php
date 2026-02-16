@@ -15,7 +15,7 @@ class PharmacyDashboardController extends Controller
         $pharmacyUser = Auth::guard('pharmacy')->user();
         $query = Prescription::query()
             ->with(['patient', 'doctor'])
-            ->where('status', '!=', 'draft'); // Only show sent or dispensed prescriptions
+            ->where('status', 'sent'); // Strictly show only sent prescriptions as per status rules
 
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -30,7 +30,7 @@ class PharmacyDashboardController extends Controller
     public function show($id)
     {
         $prescription = Prescription::with(['patient', 'doctor', 'items.medicine', 'examination', 'dispensedBy'])
-            ->where('status', '!=', 'draft')
+            ->whereIn('status', ['sent', 'final', 'dispensed'])
             ->findOrFail($id);
 
         return view('pharmacy.prescriptions.show', compact('prescription'));

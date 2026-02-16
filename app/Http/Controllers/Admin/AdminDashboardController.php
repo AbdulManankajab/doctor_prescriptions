@@ -8,6 +8,7 @@ use App\Models\Prescription;
 use App\Models\Doctor;
 use App\Models\Examination;
 use App\Models\Diagnosis;
+use App\Models\Visit;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Str;
@@ -20,6 +21,7 @@ class AdminDashboardController extends Controller
         $totalPatients = Patient::count();
         $totalPrescriptions = Prescription::count();
         $totalExaminations = Examination::count();
+        $totalVisits = Visit::count();
         $totalPharmacyUsers = \App\Models\PharmacyUser::count();
         
         $pendingPrescriptions = Prescription::where('status', 'sent')->count();
@@ -44,6 +46,7 @@ class AdminDashboardController extends Controller
             'totalPharmacyUsers',
             'pendingPrescriptions',
             'dispensedPrescriptions',
+            'totalVisits',
             'topDiagnoses', 
             'recentPrescriptions'
         ));

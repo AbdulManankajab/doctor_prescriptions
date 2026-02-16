@@ -5,8 +5,8 @@
 @section('content')
 <div class="row g-4 mb-4">
     <!-- Stat Cards -->
-    <div class="col-md-6">
-        <div class="card h-100 bg-white border-0">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 bg-white border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-3">
@@ -20,8 +20,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card h-100 bg-white border-0">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 bg-white border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-3">
@@ -35,30 +35,83 @@
             </div>
         </div>
     </div>
+
+    <!-- Search Patient Card -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 h-100 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3 text-uppercase text-muted" style="font-size: 0.75rem;"><i class="bi bi-search me-2"></i> Search Patients</h6>
+                <div class="position-relative">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search visit #, name..." aria-label="Search" style="height: 58px;">
+                        <button class="btn btn-primary" id="searchBtn">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <div id="searchResults" class="mt-2 position-absolute bg-white shadow-lg rounded-3 p-0 border w-100 overflow-hidden d-none" style="z-index: 1000;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 h-100 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3 text-uppercase text-muted" style="font-size: 0.75rem;"><i class="bi bi-qr-code-scan me-2"></i> Quick Actions</h6>
+                <a href="{{ route('scan.index') }}" class="btn btn-teal w-100 py-2 d-flex align-items-center justify-content-center" style="background-color: #0d9488; color: white; border: none; height: 58px;">
+                    <i class="bi bi-qr-code-scan me-2"></i> Scan QR
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row g-4 mb-4">
-    <!-- Search Patient Card -->
+    <!-- Patient Queue Section -->
     <div class="col-12">
-        <div class="card border-0">
-            <div class="card-body p-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-search me-2"></i> Search My Patients</h5>
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <input type="text" id="searchInput" class="form-control form-control-lg border-2" placeholder="Search by name, phone, or patient number...">
-                    </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-primary btn-lg w-100" id="searchBtn">
-                            <i class="bi bi-search me-1"></i> Search
-                        </button>
-                    </div>
-                    <div class="col-md-2">
-                        <a href="{{ route('scan.index') }}" class="btn btn-teal btn-lg w-100" style="background-color: #0d9488; color: white; border: none;">
-                            <i class="bi bi-qr-code-scan me-1"></i> Scan QR
-                        </a>
-                    </div>
+        <div class="card border-0 shadow-sm" style="border-left: 5px solid #667eea !important;">
+            <div class="card-header bg-white p-4 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-person-lines-fill me-2"></i> Patient Queue (Pending Visits)</h5>
+                <span class="badge bg-primary rounded-pill">{{ count($stats['pending_visits']) }} Patients Waiting</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Visit #</th>
+                                <th>Patient</th>
+                                <th>Waiting Since</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($stats['pending_visits'] as $visit)
+                            <tr>
+                                <td class="ps-4 fw-bold text-primary">{{ $visit->visit_number }}</td>
+                                <td>
+                                    <div class="fw-bold">{{ $visit->patient->name }}</div>
+                                    <div class="small text-muted">{{ $visit->patient->gender }}, {{ $visit->patient->age }}Y | {{ $visit->patient->phone }}</div>
+                                </td>
+                                <td>{{ $visit->created_at->diffForHumans() }}</td>
+                                <td>
+                                    <a href="{{ route('doctor.prescription.create', ['patientId' => $visit->patient_id, 'visit_id' => $visit->id]) }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                        <i class="bi bi-pencil-square"></i> Open Consultation
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="bi bi-emoji-smile fs-4 d-block mb-2"></i>
+                                    Queue is empty. No pending visits for you.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-                <div id="searchResults" class="mt-4"></div>
             </div>
         </div>
     </div>
@@ -97,6 +150,8 @@
                                 <td>
                                     @if($prescription->status === 'draft')
                                         <span class="badge bg-secondary">Draft</span>
+                                    @elseif($prescription->status === 'final')
+                                        <span class="badge bg-primary">Finalized</span>
                                     @elseif($prescription->status === 'sent')
                                         <span class="badge bg-warning text-dark">Sent to Pharmacy</span>
                                     @elseif($prescription->status === 'dispensed')
@@ -167,6 +222,7 @@ $(document).ready(function() {
 
     function displayResults(patients) {
         const resultsDiv = $('#searchResults');
+        resultsDiv.removeClass('d-none');
         
         if (patients.length === 0) {
             resultsDiv.html(`
@@ -193,8 +249,8 @@ $(document).ready(function() {
                             </p>
                         </div>
                         <div>
-                            <a href="{{ url('doctor/prescription/create') }}/${patient.id}" class="btn btn-primary btn-sm rounded-pill px-3">
-                                <i class="bi bi-plus"></i> New Prescription
+                            <a href="{{ url('doctor/prescription/create') }}/${patient.id}${patient.visit_id ? '?visit_id=' + patient.visit_id : ''}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                <i class="bi bi-plus"></i> New Consultation
                             </a>
                             <a href="{{ url('doctor/patient/history') }}/${patient.id}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                                 <i class="bi bi-clock-history"></i> History

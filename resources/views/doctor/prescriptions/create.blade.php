@@ -79,7 +79,40 @@
                         </div>
                         
                         <!-- History Selection (if patient exists) -->
-                        @if(isset($patient) && $patient->examinations->count() > 0)
+                        @if(isset($patient))
+                        <div class="mt-4 p-3 bg-light rounded-4">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-hospital me-2 text-primary"></i> Diagnostics & Reports</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="fw-bold mb-0">Radiology (X-Ray)</h6>
+                                                <a href="{{ route('doctor.radiology.history', $patient->id) }}" class="small text-decoration-none">History</a>
+                                            </div>
+                                            <a href="{{ route('doctor.radiology.create', $patient->id) }}" class="btn btn-sm btn-outline-primary w-100 rounded-pill">
+                                                <i class="bi bi-plus-circle me-1"></i> New X-Ray Request
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="fw-bold mb-0">Laboratory (Lab)</h6>
+                                                <a href="{{ route('doctor.laboratory.history', $patient->id) }}" class="small text-decoration-none">History</a>
+                                            </div>
+                                            <a href="{{ route('doctor.laboratory.create', $patient->id) }}" class="btn btn-sm btn-outline-teal w-100 rounded-pill" style="border-color: #0d9488; color: #0d9488;">
+                                                <i class="bi bi-plus-circle me-1"></i> New Lab Request
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($patient->examinations->count() > 0)
                         <div class="mt-4">
                             <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-2 text-info"></i> Previous Examinations</h6>
                             <div class="list-group list-group-flush border rounded">
@@ -98,6 +131,7 @@
                                 @endforeach
                             </div>
                         </div>
+                        @endif
                         @endif
                     </div>
 
@@ -229,12 +263,11 @@
                         </div>
 
                         <div id="medicinesContainer">
-                            @for($i = 0; $i < 3; $i++)
                             <div class="medicine-row border rounded-4 p-4 mb-4 bg-light border-0 shadow-sm">
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold">Medicine Name *</label>
-                                        <select name="medicines[{{ $i }}][medicine_id]" class="form-select medicine-select" required>
+                                        <select name="medicines[0][medicine_id]" class="form-select medicine-select" required>
                                             <option value="">Select Medicine</option>
                                             @foreach($medicines as $medicine)
                                                 <option value="{{ $medicine->id }}" 
@@ -248,7 +281,7 @@
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-semibold">Type *</label>
-                                        <select name="medicines[{{ $i }}][type]" class="form-select medicine-type" required>
+                                        <select name="medicines[0][type]" class="form-select medicine-type" required>
                                             <option value="tablet">Tablet</option>
                                             <option value="syrup">Syrup</option>
                                             <option value="capsule">Capsule</option>
@@ -258,7 +291,7 @@
                                     <div class="col-md-2">
                                         <label class="form-label fw-semibold">Dosage *</label>
                                         <div class="dosage-wrapper">
-                                            <select name="medicines[{{ $i }}][dosage]" class="form-select medicine-dosage" required>
+                                            <select name="medicines[0][dosage]" class="form-select medicine-dosage" required>
                                                 <option value="">Select Dosage</option>
                                                 <option value="custom_entry">Other (Type custom)...</option>
                                             </select>
@@ -267,7 +300,7 @@
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-semibold">Duration *</label>
-                                        <select name="medicines[{{ $i }}][duration]" class="form-select" required>
+                                        <select name="medicines[0][duration]" class="form-select" required>
                                             <option value="3 days">3 days</option>
                                             <option value="5 days">5 days</option>
                                             <option value="7 days" selected>7 days</option>
@@ -279,18 +312,17 @@
                                     <div class="col-md-2 d-flex align-items-end">
                                         <div class="w-100">
                                             <label class="form-label fw-semibold">Timing *</label>
-                                            <select name="medicines[{{ $i }}][instructions]" class="form-select" required>
+                                            <select name="medicines[0][instructions]" class="form-select" required>
                                                 <option value="Before meal">Before meal</option>
                                                 <option value="After meal" selected>After meal</option>
                                                 <option value="During meal">During meal</option>
                                                 <option value="Empty stomach">Empty stomach</option>
                                             </select>
                                         </div>
-                                        <button type="button" class="btn btn-outline-danger ms-2 remove-medicine border-0" style="{{ $i < 3 ? 'display: none;' : '' }}"><i class="bi bi-trash"></i></button>
+                                        <button type="button" class="btn btn-outline-danger ms-2 remove-medicine border-0" style="display: none;"><i class="bi bi-trash"></i></button>
                                     </div>
                                 </div>
                             </div>
-                            @endfor
                         </div>
 
                         <div class="text-center mb-4">
@@ -307,19 +339,33 @@
 
                     <!-- Navigation Buttons -->
                     <div class="d-flex justify-content-between mt-5 pt-4 border-top">
-                        <button type="button" class="btn btn-light px-4 rounded-pill d-none" id="prevBtn">
-                            <i class="bi bi-arrow-left me-2"></i> Previous
-                        </button>
-                        <a href="{{ route('doctor.dashboard') }}" class="btn btn-light px-4 rounded-pill" id="dashboardBtn">
-                            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
-                        </a>
+                        <input type="hidden" name="status" id="prescription_status" value="draft">
+                        @if(isset($visit))
+                            <input type="hidden" name="visit_id" value="{{ $visit->id }}">
+                        @endif
                         
-                        <button type="button" class="btn btn-primary px-5 rounded-pill shadow" id="nextBtn">
-                            Next <i class="bi bi-arrow-right ms-2"></i>
-                        </button>
-                        <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow d-none" id="submitBtn">
-                            <i class="bi bi-check2-circle me-2"></i> Finalize & Print
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light px-4 rounded-pill d-none" id="prevBtn">
+                                <i class="bi bi-arrow-left me-2"></i> Previous
+                            </button>
+                            <a href="{{ route('doctor.dashboard') }}" class="btn btn-light px-4 rounded-pill" id="dashboardBtn">
+                                <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+                            </a>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary px-5 rounded-pill shadow" id="nextBtn">
+                                Next <i class="bi bi-arrow-right ms-2"></i>
+                            </button>
+                            
+                            <button type="button" class="btn btn-outline-info px-4 rounded-pill shadow d-none" id="draftBtn">
+                                <i class="bi bi-save me-2"></i> Save as Draft
+                            </button>
+                            
+                            <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow d-none" id="submitBtn">
+                                <i class="bi bi-check2-circle me-2"></i> Finalize Prescription
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -397,6 +443,13 @@
             } else {
                 $('#prevBtn').removeClass('d-none');
                 $('#dashboardBtn').addClass('d-none');
+            }
+
+            // Show draft button from Step 3 (Diagnosis) onwards
+            if (step >= 3) {
+                $('#draftBtn').removeClass('d-none');
+            } else {
+                $('#draftBtn').addClass('d-none');
             }
 
             if (step === this.totalSteps) {
@@ -544,17 +597,30 @@
 
                 $newRow.find('.custom-dosage-input').hide();
                 $newRow.find('.medicine-dosage').empty().append('<option value="">Select Dosage</option><option value="custom_entry">Other (Type custom)...</option>');
+                
+                // Show delete button on new row
                 $newRow.find('.remove-medicine').show();
                 
                 $('#medicinesContainer').append($newRow);
+
+                // Show delete button on first row if we now have more than 1
+                if ($('.medicine-row').length > 1) {
+                    $('.medicine-row').first().find('.remove-medicine').show();
+                }
+
                 self.runAllergyCrossCheck();
             });
 
             $(document).on('click', '.remove-medicine', function() {
-                if ($('.medicine-row').length > 3) {
+                if ($('.medicine-row').length > 1) {
                     $(this).closest('.medicine-row').remove();
                     self.reindexMedicineRows();
                     self.runAllergyCrossCheck();
+                }
+                
+                // Hide delete button if only 1 row left
+                if ($('.medicine-row').length === 1) {
+                    $('.medicine-row').first().find('.remove-medicine').hide();
                 }
             });
 
@@ -660,12 +726,34 @@
         PrescriptionWorkflow.init();
 
         // Final submission validation
+        $('#draftBtn').on('click', function() {
+            $('#prescription_status').val('draft');
+            // Remove required from medicine fields for draft
+            $('.medicine-row').find('select, input').prop('required', false);
+            $('#prescriptionForm').submit();
+        });
+
+        $('#submitBtn').on('click', function() {
+            $('#prescription_status').val('final');
+            // Ensure medicine fields are required if they were optional
+            $('.medicine-row select, .medicine-row input').each(function() {
+                if ($(this).hasClass('medicine-select') || $(this).hasClass('medicine-dosage') || $(this).hasClass('medicine-type')) {
+                    $(this).prop('required', true);
+                }
+            });
+            $('#prescriptionForm').submit();
+        });
+
         $('#prescriptionForm').on('submit', function(e) {
-            if ($('#medicine-allergy-alert').is(':visible') && !$('#confirmAllergyOverride').is(':checked')) {
-                e.preventDefault();
-                $('#confirmAllergyOverride').addClass('is-invalid');
-                alert('Please confirm that you have reviewed the allergy alert before finalizing.');
-                return false;
+            const status = $('#prescription_status').val();
+            
+            if (status === 'final') {
+                if ($('#medicine-allergy-alert').is(':visible') && !$('#confirmAllergyOverride').is(':checked')) {
+                    e.preventDefault();
+                    $('#confirmAllergyOverride').addClass('is-invalid');
+                    alert('Please confirm that you have reviewed the allergy alert before finalizing.');
+                    return false;
+                }
             }
         });
     });
